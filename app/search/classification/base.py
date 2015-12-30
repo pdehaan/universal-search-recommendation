@@ -51,8 +51,9 @@ class BaseClassifier(object):
     """
     type = None
 
-    def __init__(self, result):
+    def __init__(self, result, document):
         self.result = result
+        self.document = document
         self.url = urlparse(result['url'])
         self.is_match = self.is_match(result)
 

@@ -1,3 +1,5 @@
+from pyquery import PyQuery as pq
+
 from memcached import memcached
 from memorize import memorize
 from search.classification import CLASSIFIERS
@@ -41,7 +43,7 @@ class SearchRecommendation(object):
         Returns a list of instances for all applicable classifiers for the
         search.
         """
-        return [i for i in [C(result) for C in CLASSIFIERS] if i.is_match]
+        return [i for i in [C(result, self.document) for C in CLASSIFIERS] if i.is_match]
 
     def get_suggestions(self, query):
         """
@@ -61,6 +63,14 @@ class SearchRecommendation(object):
         Queries the appropriate search engine, returns the top result.
         """
         return self.get_query_engine()(query).results
+
+    def get_document(self, url):
+        """
+        Returns a PyQuery document for the passed URL. This is used in the
+        construction of each classifier, so it can inspect the document body if
+        appropriate.
+        """
+        return pq(url=url)
 
     def get_recommendation(self, query, suggestion, classifiers, result):
         """
@@ -86,6 +96,7 @@ class SearchRecommendation(object):
         self.suggestions = self.get_suggestions(query)
         self.top_suggestion = self.get_top_suggestion(self.suggestions)
         self.result = self.do_query(self.top_suggestion)
+        self.document = self.get_document(self.result['url'])
         self.classifiers = self.get_classifiers(self.result)
         return self.get_recommendation(
             self.query, self.top_suggestion, self.classifiers, self.result)
